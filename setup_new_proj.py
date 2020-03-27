@@ -145,6 +145,21 @@ to_file = os.path.join(proj_src_dir, "VERSION.txt")
 print(from_file, " --> ", to_file)
 shutil.copy(from_file, to_file)
 
+from_file = os.path.join(physicell_fullpath, "config", "ecm.txt")
+to_file = os.path.join(proj_fullpath, "data", "ecm.txt")
+print(from_file, " --> ", to_file)
+shutil.copy(from_file, to_file)
+
+from_file = os.path.join(physicell_fullpath, "config", "init.txt")
+to_file = os.path.join(proj_fullpath, "data", "init.txt")
+print(from_file, " --> ", to_file)
+shutil.copy(from_file, to_file)
+
+from_file = os.path.join(physicell_fullpath, "config", "boolean_network")
+to_file = os.path.join(proj_fullpath, "data", "boolean_network")
+print(from_file, " --> ", to_file)
+shutil.copytree(from_file, to_file)
+
 from_file = os.path.join(physicell_fullpath, "config", "PhysiCell_settings.xml")
 to_file = os.path.join(proj_fullpath, "data", "PhysiCell_settings.xml")
 print(from_file, " --> ", to_file)
