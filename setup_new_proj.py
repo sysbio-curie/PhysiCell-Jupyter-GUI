@@ -84,7 +84,7 @@ print("\n\n STEP 2: copy PhysiCell project's source (and data files) to new proj
 proj_src_dir = os.path.join(proj_fullpath, 'src')
 print("proj_src_dir = ",proj_src_dir)
 
-dir_names = ["core", "BioFVM", "modules", "custom_modules"]
+dir_names = ["addons", "core", "BioFVM", "modules", "custom_modules"]
 for dname in dir_names:
     from_dir = os.path.join(physicell_fullpath, dname)
     to_dir = os.path.join(proj_src_dir, dname)
