@@ -168,6 +168,9 @@ shutil.copy(from_file, to_file)
 print("   Editing ", to_file, ": <folder>output</folder> --> <folder>.</folder>")
 with open(to_file, 'r') as myfile:
     new_text = myfile.read().replace('output', ".")
+    new_text = new_text.replace('./config/boolean_network/', "../data/boolean_network/")
+    new_text = new_text.replace('./config/ecm.txt', "../data/ecm.txt")
+    new_text = new_text.replace('./config/init.txt', "../data/init.txt")
 with open(to_file, 'w') as myfile:
     myfile.write(new_text)
 
