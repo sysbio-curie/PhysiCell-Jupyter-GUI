@@ -32,7 +32,7 @@ class PhysiBoSSTab(object):
         # self.fig = plt.figure(figsize=(7, 7))
 
         max_frames = 0
-        self.svg_plot = interactive(self.create_area_chart, frame=(0, max_frames), continuous_update=False)
+        self.svg_plot = interactive(self.create_area_chart, frame=(0, max_frames), total=False, continuous_update=False)
         plot_size = '500px'  # small: controls the size of the tab height, not the plot (rf. figsize for that)
         plot_size = '700px'  # medium
         plot_size = '750px'  # medium
@@ -164,7 +164,7 @@ class PhysiBoSSTab(object):
             
             # return self.count_dict
 
-    def create_area_chart(self, frame=None):
+    def create_area_chart(self, frame=None, total=False):
         "plot an area chart with the evolution of the network states during the simulation"
 
         self.create_dict(frame, self.output_dir)
@@ -191,7 +191,10 @@ class PhysiBoSSTab(object):
         a = np.array(a)
         #print(a)
         a = np.transpose(a)
-        percent = a /  a.sum(axis=0).astype(float) * 100
+        if not total:
+            percent = a /  a.sum(axis=0).astype(float) * 100
+        else:
+            percent = a
         x = np.arange(len(self.count_dict))
         self.fig = plt.figure(figsize=(10,7), dpi=200)
         ax = self.fig.add_subplot(111)
@@ -203,6 +206,7 @@ class PhysiBoSSTab(object):
         ax.margins(0, 0) # Set margins to avoid "whitespace"
 
         # plt.show()
+
 
 
 
