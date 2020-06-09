@@ -1335,8 +1335,9 @@ for cell_def in uep.findall('cell_definition'):
     cell_def_count += 1
 
 
-main_vbox_str += indent + "])"
-
+main_vbox_str += indent + "])\n"
+        
+initialize_default = indent + "self.display_cell_type_default()\n"
 
 # Write the beginning of the Python module for the 'Cell Types' tab in the GUI
 # cells_tab_file = "cells_def.py"
@@ -1351,6 +1352,7 @@ fp.write(desc_buttons_str)
 fp.write(row_str)
 fp.write(box_str)
 fp.write(main_vbox_str)
+fp.write(initialize_default)
 fp.write(cell_type_dropdown_cb)
 fp.write(display_cell_type_default)
 fp.write(fill_gui_str)
