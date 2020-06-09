@@ -18,6 +18,7 @@ except:
 # from svg import SVGTab
 from substrates import SubstrateTab
 from animate_tab import AnimateTab
+from physiboss import PhysiBoSSTab
 from pathlib import Path
 import platform
 import subprocess
@@ -56,6 +57,7 @@ if xml_root.find('.//cell_definitions'):
 
 # svg = SVGTab()
 sub = SubstrateTab()
+physiboss = PhysiBoSSTab()
 animate_tab = AnimateTab()
 
 nanoHUB_flag = False
@@ -249,6 +251,7 @@ def run_done_func(s, rdir):
     # and update visualizations
     # svg.update(rdir)
     sub.update(rdir)
+    physiboss.update(rdir)
 
     animate_tab.gen_button.disabled = False
 
@@ -327,6 +330,7 @@ def outcb(s):
         # sub.update('')
         # sub.update_params(config_tab)
         sub.update()
+        physiboss.update()
     return s
 
 
@@ -401,13 +405,13 @@ tab_height = 'auto'
 tab_layout = widgets.Layout(width='auto',height=tab_height, overflow_y='scroll',)   # border='2px solid black',
 
 if xml_root.find('.//cell_definitions'):
-    titles = ['About', 'Config Basics', 'Microenvironment', 'User Params', 'Cell Types', 'Out: Plots', 'Animate']
-    tabs = widgets.Tab(children=[about_tab.tab, config_tab.tab, microenv_tab.tab, user_tab.tab, cell_types_tab.tab, sub.tab, animate_tab.tab],
+    titles = ['About', 'Config Basics', 'Microenvironment', 'User Params', 'Cell Types', 'Out: Plots', 'Out: PhysiBoSS', 'Animate']
+    tabs = widgets.Tab(children=[about_tab.tab, config_tab.tab, microenv_tab.tab, user_tab.tab, cell_types_tab.tab, sub.tab, physiboss.tab, animate_tab.tab],
                    _titles={i: t for i, t in enumerate(titles)},
                    layout=tab_layout)
 else:
-    titles = ['About', 'Config Basics', 'Microenvironment', 'User Params', 'Out: Plots', 'Animate']
-    tabs = widgets.Tab(children=[about_tab.tab, config_tab.tab, microenv_tab.tab, user_tab.tab, sub.tab, animate_tab.tab],
+    titles = ['About', 'Config Basics', 'Microenvironment', 'User Params', 'Out: Plots', 'Out: PhysiBoSS', 'Animate']
+    tabs = widgets.Tab(children=[about_tab.tab, config_tab.tab, microenv_tab.tab, user_tab.tab, sub.tab, physiboss.tab, animate_tab.tab],
                    _titles={i: t for i, t in enumerate(titles)},
                    layout=tab_layout)
 
