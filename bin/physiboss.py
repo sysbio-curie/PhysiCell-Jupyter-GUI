@@ -149,14 +149,13 @@ class PhysiBoSSTab(object):
 
 
     def state_counter(self, number_of_files):
-        "create a dict with the states of the network, it can be used to print states pie chart"
+       "create a dict with the states of the network, it can be used to print states pie chart"
         self.count_dict = {}
         if number_of_files > 0:
             for i in range (0, number_of_files):
                 state_list = []
                 for key in self.file_dict["state_step{0}".format(i)]:
-                    for value in self.file_dict["state_step{0}".format(i)][key]:
-                        state_list.append(self.file_dict["state_step{0}".format(i)][key])
+                    state_list.append(self.file_dict["state_step{0}".format(i)][key])
                 state_counts = Counter(state_list)
                 fix_count_dict = {}
                 for key, group in itertools.groupby(state_counts, lambda k: 'others' if (state_counts[k]<(1* (len(self.file_dict)))) else k):
