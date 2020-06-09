@@ -574,6 +574,10 @@ for cell_def in uep.findall('cell_definition'):
                 float_var_count += 1
                 cells_tab_header += create_float_text_widget(w2, rate.text, -1)
 
+                units_str = ""
+                if 'units' in rate.attrib.keys():
+                    units_str = rate.attrib['units']
+                    
                 create_disabled_button_units(units_str)  # creates "button_widget_units"
                 color_idx = 1 - color_idx
 
