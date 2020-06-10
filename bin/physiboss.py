@@ -158,7 +158,7 @@ class PhysiBoSSTab(object):
                     state_list.append(self.file_dict["state_step{0}".format(i)][key])
                 state_counts = Counter(state_list)
                 fix_count_dict = {}
-                for key, group in itertools.groupby(state_counts, lambda k: 'others' if (state_counts[k]<(1* (len(self.file_dict)))) else k):
+                for key, group in itertools.groupby(state_counts, lambda k: 'others' if (state_counts[k]<(1* (len(self.file_dict["state_step%s" %(i)])))) else k):
                     fix_count_dict[key] = sum([state_counts[k] for k in list(group)])
                 self.count_dict["state_count{0}".format(i)] = fix_count_dict
             
