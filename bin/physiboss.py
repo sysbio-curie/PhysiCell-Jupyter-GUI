@@ -13,6 +13,7 @@ import platform
 import numpy as np
 import csv
 import itertools
+import copy
 
 # from debug import debug_view
 
@@ -32,7 +33,7 @@ class PhysiBoSSTab(object):
         # self.fig = plt.figure(figsize=(7, 7))
 
         max_frames = 0
-        self.svg_plot = interactive(self.create_area_chart, frame=(0, max_frames), total=False, continuous_update=False)
+        self.svg_plot = interactive(self.create_area_chart, frame=(0, max_frames), percentage=(0.0, 100.0), total=False, continuous_update=False)
         plot_size = '500px'  # small: controls the size of the tab height, not the plot (rf. figsize for that)
         plot_size = '700px'  # medium
         plot_size = '750px'  # medium
@@ -148,27 +149,30 @@ class PhysiBoSSTab(object):
             # return file_dict
 
 
-    def state_counter(self, number_of_files):
+    def state_counter(self, number_of_files, percentage):
        "create a dict with the states of the network, it can be used to print states pie chart"
         self.count_dict = {}
+        temp_dict = {}
+        max_cell = 0
         if number_of_files > 0:
             for i in range (0, number_of_files):
                 state_list = []
                 for key in self.file_dict["state_step{0}".format(i)]:
                     state_list.append(self.file_dict["state_step{0}".format(i)][key])
                 state_counts = Counter(state_list)
-                fix_count_dict = {}
-                for key, group in itertools.groupby(state_counts, lambda k: 'others' if (state_counts[k]<(1* (len(self.file_dict["state_step%s" %(i)])))) else k):
-                    fix_count_dict[key] = sum([state_counts[k] for k in list(group)])
-                self.count_dict["state_count{0}".format(i)] = fix_count_dict
-            
+                max_cell = max_cell + sum(state_counts.values())
+                #fix_count_dict = {}
+                #for key, group in itertools.groupby(state_counts, lambda k: 'others' if (state_counts[k]<(0.01* (len(self.file_dict["state_step%s" %(i)])))) else k):
+                    #fix_count_dict[key] = sum([state_counts[k] for k in list(group)])
+                temp_dict["state_count{0}".format(i)] = state_counts
+            self.count_dict = self.filter_states(max_cell, temp_dict, percentage)
             # return self.count_dict
 
-    def create_area_chart(self, frame=None, total=False):
+    def create_area_chart(self, frame=None, total=False, percentage=(0.0, 100.0)):
         "plot an area chart with the evolution of the network states during the simulation"
 
         self.create_dict(frame, self.output_dir)
-        self.state_counter(frame)
+        self.state_counter(frame, percentage)
         
         state_list = []
         all_state = []
@@ -207,6 +211,51 @@ class PhysiBoSSTab(object):
 
         # plt.show()
 
+    def filter_states(self, max_cell, all_counts, percentage):
+        """max_cell = 0
+        all_counts = {}
+        for i in range (0, number_of_files):
+            state_list = []
+            for key in file_dict["state_step{0}".format(i)]:
+                state_list.append(file_dict["state_step{0}".format(i)][key])
+            state_counts = Counter(state_list)
+            max_cell = max_cell + sum(state_counts.values())
+            all_counts[i] = state_counts"""
+
+        copy_all_counts = copy.deepcopy(all_counts)
+
+        state_list = []
+        all_state = []
+        for k in all_counts:
+            state_list.append(list(all_counts[k].keys()))
+            for l in state_list:
+                for state in l:
+                    all_state.append(state)
+        all_state = list(dict.fromkeys(all_state))
+    
+        banned_list = []
+        for state in all_state:
+            a = 0
+            for i in all_counts.keys():
+                try: 
+                    a = a + all_counts[i][state]
+                except:
+                    a = a + 0
+            if (a < (percentage/100) * max_cell):
+                banned_list.append(state)
+                for i in all_counts.keys():
+                    del all_counts[i][state]
+    
+        for i in all_counts.keys():
+            b = 0
+            for state in banned_list:
+                try:
+                    b = b + copy_all_counts[i][state]
+                except:
+                    b = b + 0
+            all_counts[i]["others"] = a
+
+        return all_counts
 
 
 
