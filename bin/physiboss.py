@@ -150,7 +150,7 @@ class PhysiBoSSTab(object):
 
 
     def state_counter(self, number_of_files, percentage):
-       "create a dict with the states of the network, it can be used to print states pie chart"
+        "create a dict with the states of the network, it can be used to print states pie chart"
         self.count_dict = {}
         temp_dict = {}
         max_cell = 0
