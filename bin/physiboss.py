@@ -198,13 +198,16 @@ class PhysiBoSSTab(object):
         else:
             percent = a
         x = np.arange(len(self.count_dict))
-        self.fig = plt.figure(figsize=(10,7), dpi=200)
+        self.fig = plt.figure(figsize=(10,5), dpi=200)
         ax = self.fig.add_subplot(111)
         ax.stackplot(x, percent, labels=all_state)
         ax.legend(labels=all_state, loc='upper center', bbox_to_anchor=(0.5, -0.05),shadow=True, ncol=2)
         # ax.legend(labels=all_state, bbox_to_anchor=(1.05, 1), loc='lower center', borderaxespad=0.)
         ax.set_title('100 % stacked area chart')
-        ax.set_ylabel('Percent (%)')
+        if not total:
+            ax.set_ylabel('Percent (%)')
+        else:
+            ax.set_ylabel("Total")
         ax.margins(0, 0) # Set margins to avoid "whitespace"
 
         # plt.show()
