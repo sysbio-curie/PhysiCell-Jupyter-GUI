@@ -134,14 +134,12 @@ class PhysiBoSSTab(object):
                 nodes_dict = {}
                 states_dict = {}
                 with open('%s//states_%08u.csv' %(folder,i), newline='') as csvfile:
-                    has_header = csv.Sniffer().has_header(csvfile.read(1024))
-                    csvfile.seek(0)
                     states_reader = csv.reader(csvfile, delimiter=',')
-                    if has_header:
-                        next(states_reader)
+                
                     for row in states_reader:
-                        states_dict[row[0]] = row[1]
-                        nodes_dict[row[0]] = row[1].replace("--", "").split()
+                        if row[0] != 'ID':
+                            states_dict[row[0]] = row[1]
+                            nodes_dict[row[0]] = row[1].replace("--", "").split()
                 self.file_dict["node_step{0}".format(i)] = nodes_dict
                 self.file_dict["state_step{0}".format(i)] = states_dict
 
@@ -253,7 +251,7 @@ class PhysiBoSSTab(object):
                     b = b + copy_all_counts[i][state]
                 except:
                     b = b + 0
-            all_counts[i]["others"] = a
+            all_counts[i]["others"] = b
 
         return all_counts
 
