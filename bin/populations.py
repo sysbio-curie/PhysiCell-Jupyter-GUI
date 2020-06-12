@@ -42,7 +42,7 @@ class PopulationsTab(object):
         # self.output_dir = 'tmpdir'
 
         self.figsize_width_substrate = 15.0  # allow extra for colormap
-        self.figsize_height_substrate = 12.5
+        self.figsize_height_substrate = 8
         self.figsize_width_svg = 12.0
         self.figsize_height_svg = 12.0
 
