@@ -1009,13 +1009,40 @@ class SubstrateTab(object):
             #     self.numy =  math.ceil( (self.ymax - self.ymin) / dy)
 
             try:
-                xgrid = M[0, :].reshape(self.numy, self.numx)
-                ygrid = M[1, :].reshape(self.numy, self.numx)
+            
+                if M[1, :].shape[0] > (self.numx * self.numy):
+                    
+                    # Here we need to choose a slice in the z dim
+                    # In PhysiCell, the printed cells are all who cross the z=0 plane
+                    # abs(position - 0) < cell_radius
+                    # We can't do that here, and our best choices are [-z_delta, 0] and [0, z_delta]
+                    # So we choose (arbitrarly) [0, z_delta]
+                    # And if it fails, we panic and take the first one
+                    
+                    # We look at all the possible z values
+                    z_list = np.unique(M[2, :])
+                    
+                    # We take the first one > 0
+                    try:
+                        t_z = next(obj for obj in z_list if obj>0)
+                        
+                    # Or just the first one
+                    except StopIteration:
+                        t_z = z_list[0]
+                    
+                    list_indexes = np.where(M[2, :] == t_z)
+                    
+                    xgrid = M[0, list_indexes].reshape(self.numy, self.numx)
+                    ygrid = M[1, list_indexes].reshape(self.numy, self.numx)
+                    substrate_grid = M[self.field_index, list_indexes].reshape(self.numy, self.numx)
+                    
+                else:   
+                    xgrid = M[0, :].reshape(self.numy, self.numx)
+                    ygrid = M[1, :].reshape(self.numy, self.numx)
+                    substrate_grid = M[self.field_index, :].reshape(self.numy, self.numx)
             except:
                 print("substrates.py: mismatched mesh size for reshape: numx,numy=",self.numx, self.numy)
                 pass
-#                xgrid = M[0, :].reshape(self.numy, self.numx)
-#                ygrid = M[1, :].reshape(self.numy, self.numx)
 
             num_contours = 15
             levels = MaxNLocator(nbins=num_contours).tick_values(self.cmap_min.value, self.cmap_max.value)
@@ -1023,14 +1050,14 @@ class SubstrateTab(object):
             if (self.cmap_fixed_toggle.value):
                 try:
                     # substrate_plot = main_ax.contourf(xgrid, ygrid, M[self.field_index, :].reshape(self.numy, self.numx), levels=levels, extend='both', cmap=self.field_cmap.value, fontsize=self.fontsize)
-                    substrate_plot = plt.contourf(xgrid, ygrid, M[self.field_index, :].reshape(self.numy, self.numx), levels=levels, extend='both', cmap=self.field_cmap.value, fontsize=self.fontsize)
+                    substrate_plot = plt.contourf(xgrid, ygrid, substrate_grid, levels=levels, extend='both', cmap=self.field_cmap.value, fontsize=self.fontsize)
                 except:
                     contour_ok = False
                     # print('got error on contourf 1.')
             else:    
                 try:
                     # substrate_plot = main_ax.contourf(xgrid, ygrid, M[self.field_index, :].reshape(self.numy,self.numx), num_contours, cmap=self.field_cmap.value)
-                    substrate_plot = plt.contourf(xgrid, ygrid, M[self.field_index, :].reshape(self.numy,self.numx), num_contours, cmap=self.field_cmap.value)
+                    substrate_plot = plt.contourf(xgrid, ygrid, substrate_grid, num_contours, cmap=self.field_cmap.value)
                 except:
                     contour_ok = False
                     # print('got error on contourf 2.')
