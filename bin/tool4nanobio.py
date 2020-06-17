@@ -57,7 +57,7 @@ if xml_root.find('.//cell_definitions'):
     cell_types_tab = CellTypesTab()
 
 # svg = SVGTab()
-sub = SubstrateTab()
+sub = SubstrateTab(cell_types_tab)
 populations = PopulationsTab()
 physiboss = PhysiBoSSTab()
 animate_tab = AnimateTab()

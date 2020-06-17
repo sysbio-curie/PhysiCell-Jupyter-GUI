@@ -36,7 +36,7 @@ warnings.filterwarnings("ignore")
 
 class SubstrateTab(object):
 
-    def __init__(self):
+    def __init__(self, celltypes_tab=None):
         
         self.output_dir = '.'
         # self.output_dir = 'tmpdir'
@@ -336,16 +336,51 @@ class SubstrateTab(object):
 
         self.grid_toggle.observe(grid_toggle_cb)
 
-        self.list_nodes = ['<select a node>']
-        self.color_physiboss = False
-        self.color_physiboss_node = self.list_nodes[0]
+        # self.list_nodes = ['<select a node>']        
+        # if celltypes_tab is not None:
+        cfg_file = celltypes_tab.cfg_filenames[0]
+        outputs = []
+        
+        
+        self.cell_types = list(celltypes_tab.cell_type_dict.values())
+        self.cfg_filenames = celltypes_tab.cell_type_dict
+        self.selected_cell_type = 0
+        self.field_physiboss_id_celldef = Dropdown(
+            options=self.cell_types,
+            value=self.cell_types[self.selected_cell_type],
+            layout=Layout(width=constWidth)
+        )
+        self.field_physiboss_id_celldef.observe(self.field_physiboss_id_celldef_cb)
 
+        
+        cfg_file = celltypes_tab.cfg_filenames[self.selected_cell_type]
+        self.list_nodes = []
+        if cfg_file is not None:
+            with open(os.path.join("data", cfg_file.value), 'r') as cfg:
+                for line in cfg:
+                    if ".is_internal" in line:
+                        t_node, r = line.split(".")
+                        _, val = r.split("=")
+                        val = int(val.strip()[:-1])
+                        if val == 0:
+                            outputs.append(t_node.strip())
+
+            self.list_nodes = outputs
+            
+        
+        
         self.field_physiboss_node = Dropdown(
             options=self.list_nodes,
             value=self.list_nodes[0],
+            disabled=(len(self.list_nodes) == 0),
             #     description='Field',
-           layout=Layout(width=constWidth)
+            layout=Layout(width=constWidth)
         )
+
+        
+        self.color_physiboss = False
+        self.color_physiboss_node = self.list_nodes[0]
+
 #        self.field_cmap.observe(self.plot_substrate)
     
       
@@ -400,7 +435,7 @@ class SubstrateTab(object):
         # row2 = HBox( [row2a, self.substrates_toggle, self.grid_toggle])
         row2 = HBox( [row2a, Label('.....'), row2b])
 
-        row3a = Box([self.physiboss, self.field_physiboss_node], layout=Layout(border='1px solid black',
+        row3a = Box([self.physiboss, self.field_physiboss_id_celldef, self.field_physiboss_node], layout=Layout(border='1px solid black',
                             width='50%',
                             height='',
                             align_items='stretch',
@@ -477,6 +512,23 @@ class SubstrateTab(object):
     # def update_max_frames_expected(self, value):  # called when beginning an interactive Run
     #     self.max_frames.value = value  # assumes naming scheme: "snapshot%08d.svg"
     #     self.mcds_plot.children[0].max = self.max_frames.value
+    def field_physiboss_id_celldef_cb(self, b):
+        self.list_nodes = []
+        cfg_file = self.cfg_filenames[self.field_physiboss_id_celldef.field_index]
+        if cfg_file is not None:
+            with open(os.path.join("data", cfg_file.value), 'r') as cfg:
+                for line in cfg:
+                    if ".is_internal" in line:
+                        t_node, r = line.split(".")
+                        _, val = r.split("=")
+                        val = int(val.strip()[:-1])
+                        if val == 0:
+                            outputs.append(t_node.strip())
+
+            self.list_nodes = outputs
+        self.field_physiboss_id_celldef.options = self.list_nodes
+        self.field_physiboss_id_celldef.disabled = (len(self.list_nodes) == 0)
+
     def field_physiboss_cb(self, b):
         self.color_physiboss_node = self.field_physiboss_node.value
         self.i_plot.update()
@@ -797,7 +849,6 @@ class SubstrateTab(object):
         import csv
         
         states_dict = {}
-        all_nodes = set()
         with open('%s//states_%08u.csv' %(self.output_dir,frame), newline='') as csvfile:
             states_reader = csv.reader(csvfile, delimiter=',')
                 
@@ -805,12 +856,6 @@ class SubstrateTab(object):
                 if row[0] != 'ID' and int(row[0]) in cell_ids and row[1] != "<nil>":
                     nodes = row[1].split(" -- ")
                     states_dict[int(row[0])] = nodes
-                    all_nodes.update(set(nodes))
-
-        self.list_nodes = list(all_nodes)
-        self.field_physiboss_node.options = self.list_nodes
-
-
 
         num_cells = 0
         #  print('------ search cells')
@@ -836,6 +881,8 @@ class SubstrateTab(object):
                             rgb = [0, 0.5, 0]
                         else:
                             rgb = [1, 0, 0]
+                    else:
+                        rgb = [0, 0, 0.5]
                     
                 else:
                     if (s[0:3] == "rgb"):  # if an rgb string, e.g. "rgb(175,175,80)" 
