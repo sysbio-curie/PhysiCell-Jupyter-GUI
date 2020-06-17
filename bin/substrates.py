@@ -336,6 +336,30 @@ class SubstrateTab(object):
 
         self.grid_toggle.observe(grid_toggle_cb)
 
+        self.list_nodes = ['<select a node>']
+        self.color_physiboss = False
+        self.color_physiboss_node = self.list_nodes[0]
+
+        self.field_physiboss_node = Dropdown(
+            options=self.list_nodes,
+            value=self.list_nodes[0],
+            #     description='Field',
+           layout=Layout(width=constWidth)
+        )
+#        self.field_cmap.observe(self.plot_substrate)
+    
+      
+        self.field_physiboss_node.observe(self.field_physiboss_cb)
+    
+        
+        self.physiboss = Checkbox(
+            description='Color by PhysiBoSS value',
+            disabled=False,
+#           layout=Layout(width=constWidth2),
+        )
+
+        self.physiboss.observe(self.physiboss_cb)
+
 #        field_cmap_row3 = Box([self.save_min_max, self.cmap_min, self.cmap_max])
 
         # mcds_tab = widgets.VBox([mcds_dir, mcds_plot, mcds_play], layout=tab_layout)
@@ -376,6 +400,15 @@ class SubstrateTab(object):
         # row2 = HBox( [row2a, self.substrates_toggle, self.grid_toggle])
         row2 = HBox( [row2a, Label('.....'), row2b])
 
+        row3a = Box([self.physiboss, self.field_physiboss_node], layout=Layout(border='1px solid black',
+                            width='50%',
+                            height='',
+                            align_items='stretch',
+                            flex_direction='row',
+                            display='flex'))
+        
+        row3 = HBox( [row3a])
+
         if (hublib_flag):
             self.download_button = Download('mcds.zip', style='warning', icon='cloud-download', 
                                                 tooltip='Download data', cb=self.download_cb)
@@ -385,12 +418,12 @@ class SubstrateTab(object):
             download_row = HBox([self.download_button.w, self.download_svg_button.w, Label("Download all cell plots (browser must allow pop-ups).")])
 
             # box_layout = Layout(border='0px solid')
-            controls_box = VBox([row1, row2])  # ,width='50%', layout=box_layout)
+            controls_box = VBox([row1, row2, row3])  # ,width='50%', layout=box_layout)
             self.tab = VBox([controls_box, self.i_plot, download_row])
             # self.tab = VBox([controls_box, self.debug_str, self.i_plot, download_row])
         else:
             # self.tab = VBox([row1, row2])
-            self.tab = VBox([row1, row2, self.i_plot])
+            self.tab = VBox([row1, row2, row3, self.i_plot])
 
     #---------------------------------------------------
     def update_dropdown_fields(self, data_dir):
@@ -444,6 +477,13 @@ class SubstrateTab(object):
     # def update_max_frames_expected(self, value):  # called when beginning an interactive Run
     #     self.max_frames.value = value  # assumes naming scheme: "snapshot%08d.svg"
     #     self.mcds_plot.children[0].max = self.max_frames.value
+    def field_physiboss_cb(self, b):
+        self.color_physiboss_node = self.field_physiboss_node.value
+        self.i_plot.update()
+
+    def physiboss_cb(self, b):
+        self.color_physiboss = self.physiboss.value
+        self.i_plot.update()
 
 #------------------------------------------------------------------------------
     def update_params(self, config_tab, user_params_tab):
@@ -750,6 +790,28 @@ class SubstrateTab(object):
                 break
             numChildren += 1
 
+        cell_ids = []
+        for child in cells_parent:
+            cell_ids.append(int(child.attrib["id"][4:]))
+
+        import csv
+        
+        states_dict = {}
+        all_nodes = set()
+        with open('%s//states_%08u.csv' %(self.output_dir,frame), newline='') as csvfile:
+            states_reader = csv.reader(csvfile, delimiter=',')
+                
+            for row in states_reader:
+                if row[0] != 'ID' and int(row[0]) in cell_ids and row[1] != "<nil>":
+                    nodes = row[1].split(" -- ")
+                    states_dict[int(row[0])] = nodes
+                    all_nodes.update(set(nodes))
+
+        self.list_nodes = list(all_nodes)
+        self.field_physiboss_node.options = self.list_nodes
+
+
+
         num_cells = 0
         #  print('------ search cells')
         for child in cells_parent:
@@ -767,12 +829,21 @@ class SubstrateTab(object):
                 s = circle.attrib['fill']
                 # print("s=",s)
                 # print("type(s)=",type(s))
-                if (s[0:3] == "rgb"):  # if an rgb string, e.g. "rgb(175,175,80)" 
-                    rgb = list(map(int, s[4:-1].split(",")))  
-                    rgb[:] = [x / 255. for x in rgb]
-                else:     # otherwise, must be a color name
-                    rgb_tuple = mplc.to_rgb(mplc.cnames[s])  # a tuple
-                    rgb = [x for x in rgb_tuple]
+                if self.color_physiboss and self.color_physiboss_node[0] != '<':
+                    
+                    if int(child.attrib['id'][4:]) in states_dict.keys():
+                        if self.color_physiboss_node in states_dict[int(child.attrib['id'][4:])]:
+                            rgb = [0, 0.5, 0]
+                        else:
+                            rgb = [1, 0, 0]
+                    
+                else:
+                    if (s[0:3] == "rgb"):  # if an rgb string, e.g. "rgb(175,175,80)" 
+                        rgb = list(map(int, s[4:-1].split(",")))  
+                        rgb[:] = [x / 255. for x in rgb]
+                    else:     # otherwise, must be a color name
+                        rgb_tuple = mplc.to_rgb(mplc.cnames[s])  # a tuple
+                        rgb = [x for x in rgb_tuple]
 
                 # test for bogus x,y locations (rwh TODO: use max of domain?)
                 too_large_val = 10000.
