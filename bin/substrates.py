@@ -933,7 +933,11 @@ class SubstrateTab(object):
             import matplotlib as mpl
             from matplotlib import cm
             
-            norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
+            if vmin != vmax:
+                norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
+            else:
+                norm = mpl.colors.Normalize(vmin=0, vmax=vmax)
+                
             self.scalarMap = cm.ScalarMappable(norm=norm, cmap=self.field_custom_data_cmap.value)
             
                 
