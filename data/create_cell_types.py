@@ -1022,7 +1022,7 @@ for cell_def in uep.findall('cell_definition'):
                     bnd_filename_text_str = indent + bnd_filename_name + " = Text(value='" + elm.text + "', style=style, layout=widget_layout)\n"
                     cells_tab_header += bnd_filename_text_str
                     
-                    fill_gui_and_xml(bnd_filename_name, subpath2)
+                    fill_gui_and_xml_string(bnd_filename_name, subpath2)
 
                     row_str = indent + "row = [" + row_name + ", " + bnd_filename_name + "]\n"
                     cells_tab_header += row_str
@@ -1049,7 +1049,7 @@ for cell_def in uep.findall('cell_definition'):
                     cfg_filename_text_str = indent + cfg_filename_name + " = Text(value='" + elm.text + "', style=style, layout=widget_layout)\n"
                     cells_tab_header += cfg_filename_text_str
 
-                    fill_gui_and_xml(cfg_filename_name, subpath2)
+                    fill_gui_and_xml_string(cfg_filename_name, subpath2)
 
                     row_str = indent + "row = [" + row_name + ", " + cfg_filename_name + "]\n"
                     cells_tab_header += row_str
