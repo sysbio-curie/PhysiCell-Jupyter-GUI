@@ -381,7 +381,7 @@ class SubstrateTab(object):
         
         
         self.cell_types = list(celltypes_tab.cell_type_dict.values())
-        self.cfg_filenames = celltypes_tab.cell_type_dict
+        self.cfg_filenames = celltypes_tab.cfg_filenames
         self.selected_cell_type = 0
         self.field_physiboss_id_celldef = Dropdown(
             options=self.cell_types,
@@ -409,7 +409,7 @@ class SubstrateTab(object):
         
         self.field_physiboss_node = Dropdown(
             options=self.list_nodes,
-            value=self.list_nodes[0],
+            value=(self.list_nodes[0] if len(self.list_nodes) > 0 else None),
             disabled=(len(self.list_nodes) == 0),
             #     description='Field',
             layout=Layout(width=constWidth)
@@ -417,7 +417,7 @@ class SubstrateTab(object):
 
         
         self.color_physiboss = False
-        self.color_physiboss_node = self.list_nodes[0]
+        self.color_physiboss_node = self.list_nodes[0] if len(self.list_nodes) > 0 else None
 
 #        self.field_cmap.observe(self.plot_substrate)
     
@@ -568,22 +568,27 @@ class SubstrateTab(object):
     #     self.max_frames.value = value  # assumes naming scheme: "snapshot%08d.svg"
     #     self.mcds_plot.children[0].max = self.max_frames.value
     def field_physiboss_id_celldef_cb(self, b):
-        self.list_nodes = []
-        cfg_file = self.cfg_filenames[self.field_physiboss_id_celldef.field_index]
-        if cfg_file is not None:
-            outputs = []
-            with open(os.path.join("data", cfg_file.value), 'r') as cfg:
-                for line in cfg:
-                    if ".is_internal" in line:
-                        t_node, r = line.split(".")
-                        _, val = r.split("=")
-                        val = 1 if val.strip()[:-1] in ["1", "TRUE"] else 0
-                        if val == 0:
-                            outputs.append(t_node.strip())
+        
+        if isinstance(b['new'], dict) and 'index' in b['new'].keys():
+            self.list_nodes = []
 
-            self.list_nodes = outputs
-        self.field_physiboss_id_celldef.options = self.list_nodes
-        self.field_physiboss_id_celldef.disabled = (len(self.list_nodes) == 0)
+            cfg_file = self.cfg_filenames[int(b['new']['index'])]
+            if cfg_file is not None:
+                outputs = []
+                with open(os.path.join(self.output_dir, cfg_file.value), 'r') as cfg:
+                    for line in cfg:
+                        if ".is_internal" in line:
+                            t_node, r = line.split(".")
+                            _, val = r.split("=")
+                            val = 1 if val.strip()[:-1] in ["1", "TRUE"] else 0
+                            if val == 0:
+                                outputs.append(t_node.strip())
+
+                self.list_nodes = outputs
+        
+            self.color_physiboss_node = (self.list_nodes[0] if len(self.list_nodes) > 0 else None)
+            self.field_physiboss_node.options = self.list_nodes
+            self.field_physiboss_node.disabled = (len(self.list_nodes) == 0)
 
     def field_physiboss_cb(self, b):
         self.color_physiboss_node = self.field_physiboss_node.value
@@ -977,8 +982,7 @@ class SubstrateTab(object):
                     rgb = self.scalarMap.to_rgba(M[index_id])
                     
                 else:
-                    if self.color_physiboss and self.color_physiboss_node[0] != '<':
-                        
+                    if self.color_physiboss and self.color_physiboss_node is not None and self.color_physiboss_node[0] != '<':
                         if int(child.attrib['id'][4:]) in states_dict.keys():
                             if self.color_physiboss_node in states_dict[int(child.attrib['id'][4:])]:
                                 rgb = [0, 0.5, 0]
