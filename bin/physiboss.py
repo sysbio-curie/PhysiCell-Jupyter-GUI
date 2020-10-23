@@ -159,7 +159,7 @@ class PhysiBoSSTab(object):
             for i in range (0, number_of_files):
                 nodes_dict = {}
                 states_dict = {}
-                with open('%s//states_%08u.csv' %(folder,i), newline='') as csvfile:
+                with open(os.path.join(self.output_dir, 'states_%08u.csv' % i), newline='') as csvfile:
                     states_reader = csv.reader(csvfile, delimiter=',')
                 
                     for row in states_reader:
