@@ -399,7 +399,7 @@ class SubstrateTab(object):
                     if ".is_internal" in line:
                         t_node, r = line.split(".")
                         _, val = r.split("=")
-                        val = int(val.strip()[:-1])
+                        val = 1 if val.strip()[:-1] in ["1", "TRUE"] else 0
                         if val == 0:
                             outputs.append(t_node.strip())
 
@@ -577,7 +577,7 @@ class SubstrateTab(object):
                     if ".is_internal" in line:
                         t_node, r = line.split(".")
                         _, val = r.split("=")
-                        val = int(val.strip()[:-1])
+                        val = 1 if val.strip()[:-1] in ["1", "TRUE"] else 0
                         if val == 0:
                             outputs.append(t_node.strip())
 
