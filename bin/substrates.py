@@ -20,6 +20,10 @@ import platform
 import zipfile
 from debug import debug_view 
 import warnings
+import matplotlib as mpl
+from matplotlib import cm
+import csv
+
 
 hublib_flag = True
 if platform.system() != 'Windows':
@@ -570,6 +574,8 @@ class SubstrateTab(object):
     def field_physiboss_id_celldef_cb(self, b):
         
         if isinstance(b['new'], dict) and 'index' in b['new'].keys():
+            self.selected_cell_type = int(b['new']['index'])
+
             self.list_nodes = []
 
             cfg_file = self.cfg_filenames[int(b['new']['index'])]
@@ -935,9 +941,6 @@ class SubstrateTab(object):
             vmin = np.min(M)
             vmax = np.max(M)
             
-            import matplotlib as mpl
-            from matplotlib import cm
-            
             if vmin != vmax:
                 norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
             else:
@@ -947,15 +950,25 @@ class SubstrateTab(object):
             
                 
         elif self.color_physiboss:
-        
-            import csv
+            fname = "output%08d_cells_physicell.mat" % frame
+            full_fname = os.path.join(self.output_dir, fname)
+            
+            if not os.path.isfile(full_fname):
+                print("Once output files are generated, click the slider.")  # No:  output00000000_microenvironment0.mat
+                return
+            
+            info_dict = {}
+            scipy.io.loadmat(full_fname, info_dict)
+
+            dict_cell_types = {id:info_dict['cells'][5, i].astype(int) for i, id in enumerate(info_dict['cells'][0, :].astype(int))}
+            
             
             states_dict = {}
             with open('%s//states_%08u.csv' %(self.output_dir,frame), newline='') as csvfile:
                 states_reader = csv.reader(csvfile, delimiter=',')
                     
                 for row in states_reader:
-                    if row[0] != 'ID' and int(row[0]) in cell_ids and row[1] != "<nil>":
+                    if row[0] != 'ID' and int(row[0]):
                         nodes = row[1].split(" -- ")
                         states_dict[int(row[0])] = nodes
 
@@ -982,7 +995,7 @@ class SubstrateTab(object):
                     rgb = self.scalarMap.to_rgba(M[index_id])
                     
                 else:
-                    if self.color_physiboss and self.color_physiboss_node is not None and self.color_physiboss_node[0] != '<':
+                    if self.color_physiboss and self.color_physiboss_node is not None and dict_cell_types[int(child.attrib['id'][4:])] == self.selected_cell_type:
                         if int(child.attrib['id'][4:]) in states_dict.keys():
                             if self.color_physiboss_node in states_dict[int(child.attrib['id'][4:])]:
                                 rgb = [0, 0.5, 0]
