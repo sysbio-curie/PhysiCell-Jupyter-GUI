@@ -202,3 +202,4 @@ class PopulationsTab(object):
         ax.stackplot(range(0, frame), t_data , labels=t_names)
         ax.legend(labels=t_names, loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=2)
 
+        ax.margins(0, 0) # Set margins to avoid "whitespace"

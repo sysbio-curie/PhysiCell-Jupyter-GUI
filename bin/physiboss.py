@@ -27,7 +27,9 @@ class PhysiBoSSTab(object):
         #                     height=tab_height, overflow_y='scroll')
 
         self.output_dir = '.'
-
+        self.figsize_width = 15.0  # allow extra for colormap
+        self.figsize_height = 8
+        
         constWidth = '180px'
 
 #        self.fig = plt.figure(figsize=(6, 6))
@@ -84,7 +86,7 @@ class PhysiBoSSTab(object):
         box_layout = Layout(display='flex',
                     flex_flow='row',
                     align_items='stretch',
-                    width='70%')
+                    width='900px')
         row1 = Box(children=items_auto, layout=box_layout)
 
         self.tab = VBox([row1, self.svg_plot])
@@ -139,12 +141,13 @@ class PhysiBoSSTab(object):
                 title_str = svals[2] + "d, " + svals[4] + "h, " + svals[7] + "m"
 
         title_str += " (" + str(num_cells) + " agents)"
-        self.fig = plt.figure(figsize=(15, 15))
+        # self.fig = plt.figure(figsize=(15, 15))
 
         plt.xlim(self.axes_min, self.axes_max)
         plt.ylim(self.axes_min, self.axes_max)
 
         plt.title(title_str)
+        ax.margins(0, 0) # Set margins to avoid "whitespace"
 
 
 
@@ -252,7 +255,7 @@ class PhysiBoSSTab(object):
         else:
             percent = a
         x = np.arange(len(self.count_dict))
-        self.fig = plt.figure(figsize=(10,5), dpi=200)
+        self.fig = plt.figure(figsize=(self.figsize_width, self.figsize_height))
         ax = self.fig.add_subplot(111)
         ax.stackplot(x, percent, labels=all_state)
         ax.legend(labels=all_state, loc='upper center', bbox_to_anchor=(0.5, -0.05),shadow=True, ncol=2)
