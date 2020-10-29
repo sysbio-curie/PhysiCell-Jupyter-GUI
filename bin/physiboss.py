@@ -92,6 +92,8 @@ class PhysiBoSSTab(object):
         self.tab = VBox([row1, self.svg_plot])
         self.count_dict = {}
         self.file_dict = {}
+        self.cells_indexes = np.zeros((0))
+        self.up_to_frame = 0
 
     def update(self, rdir=''):
         # with debug_view:
@@ -115,68 +117,25 @@ class PhysiBoSSTab(object):
     def update_max_frames(self,_b):
         self.svg_plot.children[0].max = self.max_frames.value
 
-    #-------------------------
-    def plot_states(self, frame):
-        # global current_idx, axes_max
-        global current_frame
-        current_frame = frame
-        fname = "snapshot%08d.svg" % frame
-        full_fname = os.path.join(self.output_dir, fname)
-        
-        if not os.path.isfile(full_fname):
-            print("Once output files are generated, click the slider.")   
-            return
-            
-        tree = ET.parse(full_fname)
-        root = tree.getroot()
-        
-        numChildren = 0
-        for child in root:
-        
-            if self.use_defaults and ('width' in child.attrib.keys()):
-                self.axes_max = float(child.attrib['width'])
-        
-            if child.text and "Current time" in child.text:
-                svals = child.text.split()
-                title_str = svals[2] + "d, " + svals[4] + "h, " + svals[7] + "m"
-
-        title_str += " (" + str(num_cells) + " agents)"
-        # self.fig = plt.figure(figsize=(15, 15))
-
-        plt.xlim(self.axes_min, self.axes_max)
-        plt.ylim(self.axes_min, self.axes_max)
-
-        plt.title(title_str)
-        ax.margins(0, 0) # Set margins to avoid "whitespace"
-
-
-
-
-    def create_dict(self, number_of_files, folder, cells_indexes):
+    def create_dict(self, number_of_files, folder):
         "create a dictionary with the states file in the folder 'output', half of the dict is used to calculate the percentage of the node, the other half is for the states"
-        # if not os.path.isfile("%sstates_00000000.csv" % folder):
-        #     return
-            
-        self.file_dict = {}
+
         if number_of_files > 0:
-            for i in range (0, number_of_files):
-                nodes_dict = {}
-                states_dict = {}
-                with open(os.path.join(self.output_dir, 'states_%08u.csv' % i), newline='') as csvfile:
-                    states_reader = csv.reader(csvfile, delimiter=',')
-                
-                    for row in states_reader:
-                        if row[0] != 'ID' and (cells_indexes is None or int(row[0]) in cells_indexes):
-                            states_dict[row[0]] = row[1]
-                            nodes_dict[row[0]] = row[1].replace("--", "").split()
-                self.file_dict["node_step{0}".format(i)] = nodes_dict
-                self.file_dict["state_step{0}".format(i)] = states_dict
-
-                # print(self.file_dict)
-            # return file_dict
+            for i in range (0, number_of_files): 
+                if "state_step{0}".format(i) not in self.file_dict.keys():
+                    states_dict = {}
+                    with open(os.path.join(self.output_dir, 'states_%08u.csv' % i), newline='') as csvfile:
+                        states_reader = csv.reader(csvfile, delimiter=',')
+                    
+                        for row in states_reader:
+                            if row[0] != 'ID':
+                                states_dict[int(row[0])] = row[1]
+            
+                    self.file_dict["state_step{0}".format(i)] = states_dict
 
 
-    def state_counter(self, number_of_files, percentage):
+
+    def state_counter(self, number_of_files, percentage, cell_indexes, cell_line):
         "create a dict with the states of the network, it can be used to print states pie chart"
         self.count_dict = {}
         temp_dict = {}
@@ -185,49 +144,47 @@ class PhysiBoSSTab(object):
             for i in range (0, number_of_files):
                 state_list = []
                 for key in self.file_dict["state_step{0}".format(i)]:
-                    state_list.append(self.file_dict["state_step{0}".format(i)][key])
+                    if cell_line == 'All' or self.cells_indexes[key] == self.cell_lines_by_name[cell_line]:
+                        state_list.append(self.file_dict["state_step{0}".format(i)][key])
                 state_counts = Counter(state_list)
                 max_cell = max_cell + sum(state_counts.values())
-                #fix_count_dict = {}
-                #for key, group in itertools.groupby(state_counts, lambda k: 'others' if (state_counts[k]<(0.01* (len(self.file_dict["state_step%s" %(i)])))) else k):
-                    #fix_count_dict[key] = sum([state_counts[k] for k in list(group)])
+              
                 temp_dict["state_count{0}".format(i)] = state_counts
             self.count_dict = self.filter_states(max_cell, temp_dict, percentage)
-            # return self.count_dict
+            
 
+    def create_cell_indexes(self, frame, cell_line):
+        
+        for i in range(self.up_to_frame, frame):
+            fname = "output%08d_cells_physicell.mat" % i
+            full_fname = os.path.join(self.output_dir, fname)
+            
+            if not os.path.isfile(full_fname):
+                print("Once output files are generated, click the slider.")  # No:  output00000000_microenvironment0.mat
+                return
+
+            info_dict = {}
+            scipy.io.loadmat(full_fname, info_dict)
+            M = info_dict['cells'][[0,5], :].astype(int)
+            
+            self.cells_indexes.resize((max(self.cells_indexes.shape[0], M[0, :].max(axis=0)+1))) 
+            self.cells_indexes[M[0, :]] = M[1, :]
+            
+        self.up_to_frame = frame
+        return self.cells_indexes
+           
     def create_area_chart(self, frame=None, total=False, percentage=(0.0, 100.0), cell_line="All"):
         "plot an area chart with the evolution of the network states during the simulation"
 
         cells_indexes = None
         if cell_line != "All":
-            cells_indexes = set()
-            for i in range(0, frame):
-                fname = "output%08d_cells_physicell.mat" % i
-                full_fname = os.path.join(self.output_dir, fname)
-                
-                if not os.path.isfile(full_fname):
-                    print("Once output files are generated, click the slider.")  # No:  output00000000_microenvironment0.mat
-                    return
-
-                info_dict = {}
-                scipy.io.loadmat(full_fname, info_dict)
-
-                M = info_dict['cells'][[0,5], :].astype(int)
-                    
-                
-                
-                cell_line_index = self.cell_lines_by_name[cell_line]
-                indexes = np.where(M[1, :] == cell_line_index)
-                cells_indexes = cells_indexes.union(set(M[0, indexes][0]))
-
-            cells_indexes = list(cells_indexes)
-            
-            if len(cells_indexes) == 0:
+            cells_indexes = self.create_cell_indexes(frame, cell_line)
+            if np.sum(cells_indexes == self.cell_lines_by_name[cell_line]) == 0:
                 print("There are no %s cells." % cell_line)
                 return
-                        
-        self.create_dict(frame, self.output_dir, cells_indexes)
-        self.state_counter(frame, percentage)
+                
+        self.create_dict(frame, self.output_dir)
+        self.state_counter(frame, percentage, cells_indexes, cell_line)
         
         state_list = []
         all_state = []
@@ -260,7 +217,6 @@ class PhysiBoSSTab(object):
         ax.stackplot(x, percent, labels=all_state)
         ax.legend(labels=all_state, loc='upper center', bbox_to_anchor=(0.5, -0.05),shadow=True, ncol=2)
         # ax.legend(labels=all_state, bbox_to_anchor=(1.05, 1), loc='lower center', borderaxespad=0.)
-        ax.set_title('100 % stacked area chart')
         if not total:
             ax.set_ylabel('Percent (%)')
         else:
