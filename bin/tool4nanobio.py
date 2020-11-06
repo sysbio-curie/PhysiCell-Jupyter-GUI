@@ -36,7 +36,22 @@ if platform.system() != 'Windows':
 else:
     hublib_flag = False
 
-
+style = """
+    <style>
+       .jupyter-widgets-output-area .output_scroll {
+            height: unset !important;
+            border-radius: unset !important;
+            -webkit-box-shadow: unset !important;
+            box-shadow: unset !important;
+        }
+        .jupyter-widgets-output-area  {
+            height: auto !important;
+            width: 100%; !important;
+        }
+        .container { width:100% !important; }
+    </style>
+    """
+    
 # join_our_list = "(Join/ask questions at https://groups.google.com/forum/#!forum/physicell-users)\n"
 
 
