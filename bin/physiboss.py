@@ -190,7 +190,7 @@ class PhysiBoSSTab(object):
         all_state = []
         a = []
         for k in self.count_dict:
-            state_list.append(list(self.count_dict[k].keys()))
+            state_list.append([key for key, value in self.count_dict[k].items() if value > 0])
             for l in state_list:
                 for state in l:
                     all_state.append(state)
